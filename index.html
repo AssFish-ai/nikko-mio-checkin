@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daily Check-in</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080610;--s1:#0E0C1E;--s2:#131128;--s3:#181630;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.12);
+  --text:#F2F0FF;--muted:#6B6890;--dim:#3D3B5C;
+  --nikko:#F59E0B;--mio:#7C3AED;
+  --good:#10B981;--bad:#EF4444;--warn:#F59E0B;
+  --r:18px;--r2:12px;
+  --fn:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--fn)}
+body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
+
+/* ONBOARDING */
+#onboard{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center}
+#onboard h1{font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px}
+#onboard p{font-size:14px;color:var(--muted);margin-bottom:40px;line-height:1.6}
+.ob-btn{width:100%;padding:18px;border-radius:var(--r);border:none;font-family:var(--fn);font-size:17px;font-weight:800;cursor:pointer;margin-bottom:12px;transition:all .2s}
+.ob-nikko{background:linear-gradient(135deg,#D97706,#F59E0B);color:#000}
+.ob-mio{background:linear-gradient(135deg,#6D28D9,#7C3AED);color:#fff}
+.ob-logo{font-size:52px;margin-bottom:24px}
+
+/* TOP BAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 10px;flex-shrink:0;border-bottom:1px solid var(--bdr)}
+.tb-left{display:flex;flex-direction:column}
+.tb-date{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tb-title{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-top:1px}
+.player-pill{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bdr2);border-radius:20px;padding:5px 11px 5px 8px;font-size:12px;font-weight:700;cursor:pointer}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* PROGRESS */
+.prog{padding:10px 20px 8px;flex-shrink:0}
+.prog-track{height:2px;background:var(--bdr);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--mio),var(--nikko));transition:width .4s cubic-bezier(.4,0,.2,1)}
+.prog-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+
+/* SLIDES */
+.slides-outer{flex:1;overflow:hidden}
+.slides-inner{display:flex;height:100%;transition:transform .38s cubic-bezier(.4,0,.2,1)}
+.slide{min-width:100%;height:100%;padding:12px 20px 16px;display:flex;flex-direction:column;overflow-y:auto}
+
+/* QUESTION CARD */
+.qcard{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:22px 18px 18px;flex:1;display:flex;flex-direction:column}
+.q-ico{font-size:32px;margin-bottom:10px;line-height:1}
+.q-title{font-size:20px;font-weight:800;letter-spacing:-.4px;line-height:1.2;margin-bottom:4px}
+.q-hint{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.4}
+
+/* YES / NO */
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.yn-btn{padding:14px;border-radius:var(--r2);border:1.5px solid var(--bdr);background:rgba(255,255,255,.02);color:var(--muted);font-family:var(--fn);font-size:15px;font-weight:700;cursor:pointer;transition:all .16s}
+.yn-btn:hover{border-color:var(--bdr2);color:var(--text)}
+.yn-btn.yes.active{background:rgba(239,68,68,.12);border-color:var(--bad);color:var(--bad)}
+.yn-btn.no.active{background:rgba(16,185,129,.1);border-color:var(--good);color:var(--good)}
+.yn-btn.pos.active{background:rgba(16,185,129,.1);border-color:var(--good);color:var(--good)}
+
+/* SUB */
+.sub{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr);animation:fadeUp .2s ease}
+.sub.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sub-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:7px 12px;border-radius:20px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.02);color:var(--muted);font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s}
+.chip:hover{border-color:var(--bdr2);color:var(--text)}
+.chip.on{background:rgba(124,58,237,.18);border-color:var(--mio);color:var(--text)}
+.chip.danger.on{background:rgba(239,68,68,.15);border-color:var(--bad);color:var(--bad)}
+
+/* DRINK GRID */
+.drink-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px}
+.dtype{padding:10px 6px;border-radius:var(--r2);border:1.5px solid var(--bdr);background:rgba(255,255,255,.02);color:var(--muted);font-family:var(--fn);font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .14s}
+.dtype .di{font-size:20px;display:block;margin-bottom:3px}
+.dtype:hover{border-color:var(--bdr2);color:var(--text)}
+.dtype.on{background:rgba(124,58,237,.18);border-color:var(--mio);color:var(--text)}
+
+/* UNIT CHIPS */
+.unit-row{display:flex;flex-wrap:wrap;gap:7px}
+.uc{width:42px;height:42px;border-radius:10px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.02);color:var(--muted);font-family:var(--fn);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s}
+.uc:hover{border-color:var(--bdr2);color:var(--text)}
+.uc.on{background:rgba(124,58,237,.18);border-color:var(--mio);color:var(--text)}
+.uc.heavy{color:rgba(239,68,68,.6)}
+.uc.heavy.on{background:rgba(239,68,68,.15);border-color:var(--bad);color:var(--bad)}
+
+/* PUSHUP */
+.push-row{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.push-num{font-size:42px;font-weight:900;letter-spacing:-2px;font-family:var(--fm);min-width:76px;text-align:center}
+.push-ctrl{display:flex;flex-direction:column;gap:6px}
+.pc-btn{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.03);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .14s}
+.pc-btn:hover{border-color:var(--mio)}
+.goal-row{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)}
+.goal-lbl{font-size:11px;color:var(--muted);font-weight:600;flex-shrink:0}
+.goal-inp{width:62px;padding:6px 10px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:8px;color:var(--text);font-family:var(--fn);font-size:13px;font-weight:700;text-align:center;outline:none}
+.goal-inp:focus{border-color:var(--mio)}
+.txt-inp{width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:10px;color:var(--text);font-family:var(--fn);font-size:13px;outline:none;margin-top:6px;resize:none}
+.txt-inp:focus{border-color:var(--mio)}
+.sp{flex:1;min-height:8px}
+
+/* SLIDE NAV */
+.snav{display:flex;gap:8px;margin-top:12px;flex-shrink:0}
+.s-back{width:50px;height:50px;border-radius:13px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.03);color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .14s}
+.s-back:hover{border-color:var(--bdr2);color:var(--text)}
+.s-back.hide{opacity:0;pointer-events:none}
+.s-next{flex:1;height:50px;border-radius:13px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.02);color:var(--muted);font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s}
+.s-next.go{background:linear-gradient(135deg,var(--mio),#6D28D9);border-color:var(--mio);color:#fff;box-shadow:0 0 20px rgba(124,58,237,.3)}
+.s-next.submit.go{background:linear-gradient(135deg,#D97706,var(--nikko));border-color:var(--nikko);box-shadow:0 0 20px rgba(245,158,11,.3)}
+
+/* DONE SCREEN */
+.done-card{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:26px 18px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.done-em{font-size:48px;margin-bottom:12px}
+.done-ti{font-size:22px;font-weight:900;letter-spacing:-.4px}
+.done-su{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.done-rows{margin-top:18px;width:100%;text-align:left}
+.drow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--bdr);gap:12px}
+.drow:last-child{border-bottom:none}
+.drow-k{font-size:13px;color:var(--muted);flex-shrink:0}
+.drow-v{font-size:13px;font-weight:700;text-align:right}
+.drow-v.g{color:var(--good)}.drow-v.b{color:var(--bad)}
+.edit-lnk{margin-top:16px;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
+.go-stats-btn{margin-top:10px;width:100%;padding:14px;border-radius:13px;border:1.5px solid var(--bdr);background:transparent;color:var(--muted);font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.go-stats-btn:hover{border-color:var(--bdr2);color:var(--text)}
+
+/* ════════════════════════════════════
+   DEBT PILL — Pill shape + Option B data
+   ════════════════════════════════════ */
+.debt-pill{
+  margin:12px 20px 4px;
+  border-radius:100px;
+  border:1px solid;
+  padding:14px 22px;
+  position:relative;
+  overflow:hidden;
+  transition:all .3s;
+}
+.debt-pill.owe  {background:rgba(239,68,68,.07);  border-color:rgba(239,68,68,.28)}
+.debt-pill.owed {background:rgba(16,185,129,.06); border-color:rgba(16,185,129,.22)}
+.debt-pill.even {background:rgba(255,255,255,.03);border-color:var(--bdr)}
+
+/* Top row: label + amount */
+.dp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.dp-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.dp-amount{font-size:26px;font-weight:900;font-family:var(--fm);letter-spacing:-1px;line-height:1}
+.dp-amount.owe-c {color:var(--bad)}
+.dp-amount.owed-c{color:var(--good)}
+.dp-amount.even-c{color:var(--muted)}
+
+/* Sub text */
+.dp-sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+
+/* Divider */
+.dp-div{height:1px;background:rgba(255,255,255,.06);margin-bottom:10px}
+
+/* Stats row: 3 mini stats */
+.dp-stats{display:flex;justify-content:space-between;align-items:center}
+.dp-stat{text-align:center;flex:1}
+.dp-stat-val{font-size:13px;font-weight:800;font-family:var(--fm)}
+.dp-stat-lbl{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* All-time row */
+.dp-alltime{font-size:10px;color:var(--dim);margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.05);text-align:center}
+
+/* PERIOD TOGGLE */
+.period-row{display:flex;gap:0;margin:10px 20px 12px;background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:3px}
+.per-btn{flex:1;padding:7px;border:none;background:transparent;color:var(--muted);font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s}
+.per-btn.on{background:var(--s3);color:var(--text);border:1px solid var(--bdr2)}
+
+/* SECTION LABEL */
+.stat-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 20px 8px}
+
+/* H2H */
+.h2h{margin:0 20px;display:flex;flex-direction:column;gap:10px}
+.h2h-card{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:15px 17px}
+.h2h-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+.h2h-label{font-size:13px;font-weight:700}
+.h2h-winner{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:3px}
+.h2h-winner.nikko{color:var(--nikko)}.h2h-winner.mio{color:var(--mio)}.h2h-winner.tie{color:var(--muted)}
+.h2h-bars{display:flex;flex-direction:column;gap:6px}
+.h2h-row{display:flex;align-items:center;gap:9px}
+.h2h-name{font-size:11px;font-weight:700;width:44px;flex-shrink:0}
+.h2h-name.nc{color:var(--nikko)}.h2h-name.mc{color:var(--mio)}
+.h2h-bar-wrap{flex:1;height:6px;background:var(--bdr);border-radius:3px;overflow:hidden}
+.h2h-bar{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.h2h-val{font-size:12px;font-weight:700;font-family:var(--fm);width:26px;text-align:right;flex-shrink:0}
+
+/* MINI CARDS */
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px}
+.mini-card{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:14px 15px}
+.mini-card.you{border-top:2px solid var(--nikko)}.mini-card.them{border-top:2px solid var(--mio)}
+.mc-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.mc-streak{font-size:26px;font-weight:900;letter-spacing:-1px;font-family:var(--fm)}
+.mc-streak span{font-size:11px;font-weight:500;color:var(--muted);font-family:var(--fn)}
+.mc-meta{font-size:11px;color:var(--muted);margin-top:4px}
+.mc-meta strong{color:var(--text)}
+.fill-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:6px}
+.fill-bar-i{height:100%;border-radius:2px;transition:width .5s}
+
+/* ════════════════════════════════════
+   TRENDS TAB
+   ════════════════════════════════════ */
+.trends-page{flex:1;overflow-y:auto;padding:0 0 20px}
+.trend-toggle{display:flex;gap:0;margin:10px 20px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:3px}
+.tr-btn{flex:1;padding:7px;border:none;background:transparent;color:var(--muted);font-family:var(--fn);font-size:12px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s}
+.tr-btn.on{background:var(--s3);color:var(--text);border:1px solid var(--bdr2)}
+
+.trend-card{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:16px 18px;margin:0 20px 12px}
+.trend-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.trend-title{font-size:13px;font-weight:700}
+.trend-insight{font-size:10px;color:var(--muted);background:rgba(255,255,255,.04);padding:3px 8px;border-radius:20px;font-weight:600}
+
+.day-chart{display:flex;gap:5px;align-items:flex-end;height:60px}
+.day-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.day-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.day-bar{border-radius:3px 3px 0 0;transition:height .5s cubic-bezier(.4,0,.2,1);min-height:2px}
+.day-lbl{font-size:9px;font-weight:700;color:var(--muted)}
+
+.trend-summary{background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:15px 18px;margin:0 20px 12px}
+.ts-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.ts-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px}
+.ts-row:last-child{border-bottom:none}
+.ts-key{color:var(--muted)}
+.ts-val{font-weight:700}
+
+/* BOTTOM NAV — 4 tabs */
+nav{display:flex;flex-shrink:0;border-top:1px solid var(--bdr);background:rgba(8,6,16,.96);backdrop-filter:blur(16px)}
+.bnav{flex:1;padding:9px 0 12px;border:none;background:transparent;color:var(--muted);font-family:var(--fn);font-size:9px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:color .14s}
+.bnav.on{color:var(--text)}
+.bnav-ico{font-size:17px;display:block;margin-bottom:3px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-bg.hidden{display:none}
+.modal{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r) var(--r) 0 0;padding:24px 20px 32px;width:100%;max-width:430px;margin:0 auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:20px}
+.modal-btns{display:flex;flex-direction:column;gap:8px}
+.mbtn{width:100%;padding:14px;border-radius:13px;border:none;font-family:var(--fn);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
+.mbtn.primary{background:linear-gradient(135deg,var(--mio),#6D28D9);color:#fff}
+.mbtn.ghost{background:transparent;border:1.5px solid var(--bdr);color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--bdr2);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.on{opacity:1}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <div class="ob-logo">💪</div>
+  <h1>Who are you?</h1>
+  <p>Pick your name once. Saved to this device forever.</p>
+  <button class="ob-btn ob-nikko" onclick="setPlayer('Nikko')">I'm Nikko</button>
+  <button class="ob-btn ob-mio"   onclick="setPlayer('Mio')">I'm Mio</button>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar" id="topbar" style="display:none">
+  <div class="tb-left">
+    <div class="tb-date" id="tbDate"></div>
+    <div class="tb-title" id="tbTitle">Daily Check-in</div>
+  </div>
+  <div class="player-pill" onclick="resetPlayer()">
+    <div class="pdot" id="pdot"></div>
+    <span id="pname"></span>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog" id="prog" style="display:none">
+  <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  <div class="prog-lbl" id="progLbl">Question 1 of 5</div>
+</div>
+
+<!-- MAIN -->
+<div id="main" style="flex:1;overflow:hidden;display:flex;flex-direction:column;display:none">
+
+  <!-- ── CHECK-IN ── -->
+  <div id="tCheckin" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="slides-outer">
+      <div class="slides-inner" id="slides">
+
+        <!-- S0: Alcohol -->
+        <div class="slide">
+          <div class="qcard">
+            <div class="q-ico">🍺</div>
+            <div class="q-title">Did you drink alcohol today?</div>
+            <div class="q-hint">Any amount counts. Be honest.</div>
+            <div class="yn">
+              <button class="yn-btn yes" onclick="ans('alc','yes',this)">Yes</button>
+              <button class="yn-btn no"  onclick="ans('alc','no',this)">No</button>
+            </div>
+            <div class="sub" id="subAlc">
+              <div class="sub-lbl">What did you drink?</div>
+              <div class="drink-grid">
+                <div class="dtype" onclick="pickDrink('beer',this)"><span class="di">🍺</span>Beer</div>
+                <div class="dtype" onclick="pickDrink('wine',this)"><span class="di">🍷</span>Wine</div>
+                <div class="dtype" onclick="pickDrink('spirits',this)"><span class="di">🥃</span>Spirits</div>
+              </div>
+              <div class="sub-lbl">How many units? <span style="color:var(--bad);font-size:10px">3+ = excessive</span></div>
+              <div class="unit-row" id="uRow"></div>
+            </div>
+            <div class="sp"></div>
+          </div>
+          <div class="snav">
+            <button class="s-back hide">←</button>
+            <button class="s-next" id="n0" onclick="goSlide(1)">Next →</button>
+          </div>
+        </div>
+
+        <!-- S1: Unhealthy -->
+        <div class="slide">
+          <div class="qcard">
+            <div class="q-ico">🍔</div>
+            <div class="q-title">Did you eat unhealthy today?</div>
+            <div class="q-hint">Junk food, excess sugar, processed snacks</div>
+            <div class="yn">
+              <button class="yn-btn yes" onclick="ans('unh','yes',this)">Yes</button>
+              <button class="yn-btn no"  onclick="ans('unh','no',this)">No</button>
+            </div>
+            <div class="sub" id="subUnh">
+              <div class="sub-lbl">What? <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+              <div class="chips" style="margin-bottom:10px">
+                <div class="chip" onclick="tog(this,'unhF')">🍫 Chocolate</div>
+                <div class="chip" onclick="tog(this,'unhF')">🍕 Pizza</div>
+                <div class="chip" onclick="tog(this,'unhF')">🍟 Fast food</div>
+                <div class="chip" onclick="tog(this,'unhF')">🍰 Cake</div>
+                <div class="chip" onclick="tog(this,'unhF')">🧃 Soda</div>
+                <div class="chip" onclick="tog(this,'unhF')">🍪 Crisps</div>
+                <div class="chip" onclick="tog(this,'unhF')">🍦 Ice cream</div>
+                <div class="chip" onclick="tog(this,'unhF')">🌮 Takeaway</div>
+                <div class="chip danger" onclick="togDanger(this,'unhF','🚨 Binge eating')">🚨 Binge eating</div>
+              </div>
+              <div class="sub-lbl">Comment <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+              <textarea class="txt-inp" id="unhComment" rows="2" placeholder="What happened..."></textarea>
+            </div>
+            <div class="sp"></div>
+          </div>
+          <div class="snav">
+            <button class="s-back" onclick="goSlide(0)">←</button>
+            <button class="s-next go" id="n1" onclick="goSlide(2)">Next →</button>
+          </div>
+        </div>
+
+        <!-- S2: Workout -->
+        <div class="slide">
+          <div class="qcard">
+            <div class="q-ico">🏃</div>
+            <div class="q-title">Did you work out today?</div>
+            <div class="q-hint">Any intentional exercise counts</div>
+            <div class="yn">
+              <button class="yn-btn pos" onclick="ans('wo','yes',this)">Yes</button>
+              <button class="yn-btn no"  onclick="ans('wo','no',this)">No</button>
+            </div>
+            <div class="sub" id="subWo">
+              <div class="sub-lbl">Type? <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
+              <div class="chips">
+                <div class="chip" onclick="tog(this,'woT')">🏃 Running</div>
+                <div class="chip" onclick="tog(this,'woT')">💪 Strength</div>
+                <div class="chip" onclick="tog(this,'woT')">🚴 Cycling</div>
+                <div class="chip" onclick="tog(this,'woT')">🧘 Yoga</div>
+                <div class="chip" onclick="tog(this,'woT')">🏊 Swimming</div>
+                <div class="chip" onclick="tog(this,'woT')">🥊 Combat</div>
+                <div class="chip" onclick="tog(this,'woT')">🎾 Sport</div>
+              </div>
+            </div>
+            <div class="sp"></div>
+          </div>
+          <div class="snav">
+            <button class="s-back" onclick="goSlide(1)">←</button>
+            <button class="s-next go" id="n2" onclick="goSlide(3)">Next →</button>
+          </div>
+        </div>
+
+        <!-- S3: Push-ups -->
+        <div class="slide">
+          <div class="qcard">
+            <div class="q-ico">💪</div>
+            <div class="q-title">Did you do your push-ups?</div>
+            <div class="q-hint">Goal: <strong id="gDisp">100</strong> today</div>
+            <div class="yn">
+              <button class="yn-btn pos" onclick="ans('pu','yes',this);showPu()">Yes</button>
+              <button class="yn-btn no"  onclick="ans('pu','no',this);hidePu()">No</button>
+            </div>
+            <div class="sub" id="subPu">
+              <div class="sub-lbl">How many?</div>
+              <div class="push-row">
+                <div class="push-num" id="puDisp">100</div>
+                <div class="push-ctrl">
+                  <button class="pc-btn" onclick="adjPu(10)">＋</button>
+                  <button class="pc-btn" onclick="adjPu(-10)">－</button>
+                </div>
+              </div>
+              <div class="chips">
+                <div class="chip" onclick="setPu(50)">50</div>
+                <div class="chip" onclick="setPu(75)">75</div>
+                <div class="chip" onclick="setPu(100)">100</div>
+                <div class="chip" onclick="setPu(125)">125</div>
+                <div class="chip" onclick="setPu(150)">150</div>
+                <div class="chip" onclick="setPu(200)">200</div>
+              </div>
+            </div>
+            <div class="goal-row">
+              <span class="goal-lbl">Change goal:</span>
+              <input type="number" class="goal-inp" id="goalInp" value="100" min="1" max="999" onchange="setGoal(+this.value)">
+              <span style="font-size:11px;color:var(--muted)">push-ups / day</span>
+            </div>
+            <div class="sp"></div>
+          </div>
+          <div class="snav">
+            <button class="s-back" onclick="goSlide(2)">←</button>
+            <button class="s-next go" id="n3" onclick="goSlide(4)">Next →</button>
+          </div>
+        </div>
+
+        <!-- S4: Summary -->
+        <div class="slide">
+          <div class="qcard">
+            <div class="q-ico">📋</div>
+            <div class="q-title">Review & submit</div>
+            <div class="q-hint">Check your answers then lock them in</div>
+            <div id="sumRows" style="margin-top:12px;width:100%"></div>
+            <div id="wtSec" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)">
+              <div class="sub-lbl">🗓 End of month — log your weight</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                <input type="number" id="wtInp" class="goal-inp" style="width:80px;font-size:16px" placeholder="75.0" step="0.1">
+                <span style="color:var(--muted);font-size:13px;font-weight:600">kg</span>
+              </div>
+            </div>
+            <div class="sp"></div>
+          </div>
+          <div class="snav">
+            <button class="s-back" onclick="goSlide(3)">←</button>
+            <button class="s-next submit go" onclick="submit()">Log today 🔒</button>
+          </div>
+        </div>
+
+        <!-- S5: Done -->
+        <div class="slide">
+          <div class="done-card">
+            <div class="done-em" id="doneEm">🎉</div>
+            <div class="done-ti" id="doneTi">All logged!</div>
+            <div class="done-su" id="doneSu">Come back tomorrow.</div>
+            <div class="done-rows" id="doneRows"></div>
+            <span class="edit-lnk" onclick="editToday()">Edit today's entry</span>
+            <button class="go-stats-btn" onclick="showTab('stats')">View Stats →</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATS TAB ── -->
+  <div id="tStats" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+    <div style="flex:1;overflow-y:auto;padding-bottom:16px">
+
+      <!-- DEBT PILL -->
+      <div class="debt-pill even" id="debtPill">
+        <div class="dp-top">
+          <div class="dp-label" id="dpLabel">Monthly balance</div>
+          <div class="dp-amount even-c" id="dpAmount">0 NOK</div>
+        </div>
+        <div class="dp-sub" id="dpSub">You're even 🤝</div>
+        <div class="dp-div"></div>
+        <div class="dp-stats">
+          <div class="dp-stat">
+            <div class="dp-stat-val" id="dpMyMissed" style="color:var(--bad)">—</div>
+            <div class="dp-stat-lbl" id="dpMyName">You missed</div>
+          </div>
+          <div class="dp-stat" style="border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)">
+            <div class="dp-stat-val" id="dpFrMissed" style="color:var(--bad)">—</div>
+            <div class="dp-stat-lbl" id="dpFrName">Mio missed</div>
+          </div>
+          <div class="dp-stat">
+            <div class="dp-stat-val" id="dpAlltime" style="color:var(--muted)">0</div>
+            <div class="dp-stat-lbl">All-time NOK</div>
+          </div>
+        </div>
+        <div class="dp-alltime" id="dpAlltimeRow" style="display:none"></div>
+      </div>
+
+      <!-- PERIOD TOGGLE -->
+      <div class="period-row">
+        <button class="per-btn on" id="perMonth" onclick="setPeriod('month')">This month</button>
+        <button class="per-btn"    id="perAll"   onclick="setPeriod('all')">All time</button>
+      </div>
+
+      <!-- H2H -->
+      <div class="stat-sec">🏆 Head to Head</div>
+      <div class="h2h" id="h2hCards"></div>
+
+      <!-- STREAKS -->
+      <div class="stat-sec">📅 Tracking</div>
+      <div class="mini-grid">
+        <div class="mini-card you">
+          <div class="mc-name" id="mcYouName">You</div>
+          <div class="mc-streak" id="myStreak">— <span>days</span></div>
+          <div class="mc-meta">Last: <strong id="myLast">—</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:8px;margin-bottom:2px">
+            <span>Fill rate</span><strong id="myFill" style="color:var(--text)">—</strong>
+          </div>
+          <div class="fill-bar"><div class="fill-bar-i" id="myFillBar" style="background:var(--nikko);width:0%"></div></div>
+        </div>
+        <div class="mini-card them">
+          <div class="mc-name" id="mcFrName">Friend</div>
+          <div class="mc-streak" id="frStreak">— <span>days</span></div>
+          <div class="mc-meta">Last: <strong id="frLast">—</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:8px;margin-bottom:2px">
+            <span>Fill rate</span><strong id="frFill" style="color:var(--text)">—</strong>
+          </div>
+          <div class="fill-bar"><div class="fill-bar-i" id="frFillBar" style="background:var(--mio);width:0%"></div></div>
+        </div>
+      </div>
+
+      <button onclick="loadStats()" style="margin:14px 20px 0;width:calc(100% - 40px);padding:13px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:13px;color:var(--muted);font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── TRENDS TAB ── -->
+  <div id="tTrends" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+    <div class="trends-page">
+
+      <div class="trend-toggle">
+        <button class="tr-btn on" id="trMe" onclick="setTrend('me')">My trends</button>
+        <button class="tr-btn"    id="trVs" onclick="setTrend('vs')">vs <span id="trFrName">Mio</span></button>
+      </div>
+
+      <div class="trend-card">
+        <div class="trend-head">
+          <div class="trend-title">🍺 Alcohol by day</div>
+          <div class="trend-insight" id="insAlc">—</div>
+        </div>
+        <div class="day-chart" id="chartAlc"></div>
+      </div>
+
+      <div class="trend-card">
+        <div class="trend-head">
+          <div class="trend-title">🍔 Unhealthy eating by day</div>
+          <div class="trend-insight" id="insUnh">—</div>
+        </div>
+        <div class="day-chart" id="chartUnh"></div>
+      </div>
+
+      <div class="trend-card">
+        <div class="trend-head">
+          <div class="trend-title">🏃 Workouts by day</div>
+          <div class="trend-insight" id="insWo">—</div>
+        </div>
+        <div class="day-chart" id="chartWo"></div>
+      </div>
+
+      <!-- Summary insights -->
+      <div class="trend-summary">
+        <div class="ts-title">📊 Key insights</div>
+        <div id="insightRows"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SETTINGS TAB ── -->
+  <div id="tSettings" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+    <div style="padding:12px 20px 20px;overflow-y:auto;flex:1">
+      <div class="stat-sec" style="margin-top:6px">Profile</div>
+      <div style="background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:18px;margin-bottom:12px">
+        <label style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">You are</label>
+        <select id="sPlayer" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:10px;color:var(--text);font-family:var(--fn);font-size:14px;font-weight:600;outline:none;margin-bottom:14px">
+          <option value="Nikko">Nikko</option><option value="Mio">Mio</option>
+        </select>
+        <label style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Friend's name</label>
+        <input type="text" id="sFriend" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:10px;color:var(--text);font-family:var(--fn);font-size:14px;font-weight:600;outline:none;margin-bottom:14px" placeholder="Mio">
+        <label style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Google Apps Script URL</label>
+        <input type="url" id="sUrl" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid var(--bdr);border-radius:10px;color:var(--text);font-family:var(--fn);font-size:14px;font-weight:600;outline:none;margin-bottom:16px" placeholder="https://script.google.com/macros/s/...">
+        <button onclick="saveSet()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--mio),#6D28D9);border:none;border-radius:12px;color:#fff;font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer">Save settings</button>
+      </div>
+
+      <div class="stat-sec">💸 Penalty</div>
+      <div style="background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:16px 18px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">50 NOK per missed day · 25 NOK to backtrack up to 2 days.</div>
+        <button onclick="openSettle()" style="width:100%;padding:12px;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);border-radius:12px;color:var(--bad);font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer">Settle up / reset month</button>
+      </div>
+
+      <div class="stat-sec">Apps Script code</div>
+      <div style="background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:16px 18px">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:8px">Paste into Google Apps Script → Deploy as Web App (Anyone).</div>
+        <div id="scrBox" style="background:rgba(0,0,0,.35);border-radius:8px;padding:12px;font-size:10px;font-family:var(--fm);color:#A78BFA;line-height:1.7;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow-y:auto;border:1px solid var(--bdr)"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV — 4 tabs -->
+<nav id="bottomNav" style="display:none">
+  <button class="bnav on" id="nb-checkin" onclick="showTab('checkin')"><span class="bnav-ico">✏️</span>Today</button>
+  <button class="bnav"    id="nb-stats"   onclick="showTab('stats')"><span class="bnav-ico">📊</span>Stats</button>
+  <button class="bnav"    id="nb-trends"  onclick="showTab('trends')"><span class="bnav-ico">📈</span>Trends</button>
+  <button class="bnav"    id="nb-settings"onclick="showTab('settings')"><span class="bnav-ico">⚙️</span>Settings</button>
+</nav>
+
+<!-- MODAL: Settle -->
+<div class="modal-bg hidden" id="settleModal">
+  <div class="modal">
+    <h3>💸 Settle up</h3>
+    <p id="settleText">Confirm once money has changed hands. This resets the monthly counter.</p>
+    <div class="modal-btns">
+      <button class="mbtn primary" onclick="doSettle()">Yes, we're settled ✓</button>
+      <button class="mbtn ghost"   onclick="closeSettle()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: New month -->
+<div class="modal-bg hidden" id="monthModal">
+  <div class="modal">
+    <h3>📅 New month!</h3>
+    <p id="monthModalText">Is last month's debt settled?</p>
+    <div class="modal-btns">
+      <button class="mbtn primary" onclick="monthSettle(true)">Yes — all settled 🤝</button>
+      <button class="mbtn ghost"   onclick="monthSettle(false)">No — carry it over</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ STATE ══════════════════════════════════════════════
+const D={alc:null,drinkType:null,units:null,unh:null,unhF:[],unhComment:'',wo:null,woT:[],pu:null,puCount:100};
+let player='',friend='Mio',apiUrl='',goal=100,period='month',trendView='me',statsCache=null,curSlide=0;
+const TOTAL=5,FINE=50,BACK_FINE=25;
+const DAYS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// ══ BOOT ═══════════════════════════════════════════════
+window.onload=()=>{
+  buildUChips(); setScr();
+  const d=new Date();
+  document.getElementById('tbDate').textContent=d.toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'});
+  player=localStorage.getItem('hc_player')||'';
+  if(!player){document.getElementById('onboard').style.display='flex';}
+  else bootApp();
+};
+
+function setPlayer(name){
+  player=name; friend=name==='Nikko'?'Mio':'Nikko';
+  localStorage.setItem('hc_player',player); localStorage.setItem('hc_friend',friend);
+  document.getElementById('onboard').style.display='none'; bootApp();
+}
+function resetPlayer(){if(!confirm('Switch player?'))return;localStorage.removeItem('hc_player');location.reload();}
+
+function bootApp(){
+  friend=localStorage.getItem('hc_friend')||( player==='Nikko'?'Mio':'Nikko');
+  apiUrl=localStorage.getItem('hc_url')||'';
+  goal=parseInt(localStorage.getItem('hc_goal')||'100');
+  ['topbar','main','bottomNav'].forEach(id=>document.getElementById(id).style.display=id==='topbar'?'flex':id==='main'?'flex':'flex');
+  document.getElementById('onboard').style.display='none';
+  document.getElementById('pname').textContent=player;
+  document.getElementById('pdot').style.background=player==='Nikko'?'var(--nikko)':'var(--mio)';
+  document.getElementById('sPlayer').value=player;
+  document.getElementById('sFriend').value=friend;
+  document.getElementById('sUrl').value=apiUrl;
+  document.getElementById('mcYouName').textContent=player;
+  document.getElementById('mcFrName').textContent=friend;
+  document.getElementById('trFrName').textContent=friend;
+  document.getElementById('dpMyName').textContent=player+' missed';
+  document.getElementById('dpFrName').textContent=friend+' missed';
+  document.getElementById('goalInp').value=goal;
+  document.getElementById('gDisp').textContent=goal;
+  document.getElementById('puDisp').textContent=goal;
+  D.puCount=goal;
+  checkNewMonth();
+  const logged=localStorage.getItem(`hc_${player}_${todayKey()}`);
+  if(logged){renderDone(JSON.parse(logged));showTab('stats');loadStats();}
+  else{showTab('checkin');goSlide(0);}
+}
+
+// ══ HELPERS ════════════════════════════════════════════
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function p2(n){return String(n).padStart(2,'0');}
+function checkNewMonth(){
+  const d=new Date(),mk=`${d.getFullYear()}-${d.getMonth()+1}`;
+  const ls=localStorage.getItem('hc_lastMonth');
+  if(ls&&ls!==mk){localStorage.setItem('hc_lastMonth',mk);setTimeout(()=>document.getElementById('monthModal').classList.remove('hidden'),800);}
+  else if(!ls) localStorage.setItem('hc_lastMonth',mk);
+}
+
+// ══ SLIDES ═════════════════════════════════════════════
+function goSlide(i){
+  curSlide=i;
+  document.getElementById('slides').style.transform=`translateX(-${i*100}%)`;
+  const done=i>=TOTAL;
+  document.getElementById('prog').style.display=done?'none':'block';
+  if(!done){
+    document.getElementById('progFill').style.width=(i/TOTAL*100)+'%';
+    document.getElementById('progLbl').textContent=`Question ${i+1} of ${TOTAL}`;
+  }
+  if(i===TOTAL-1) buildSummary();
+  if(i===0) document.getElementById('n0').classList.toggle('go',D.alc!==null);
+}
+
+// ══ ANSWERS ════════════════════════════════════════════
+function ans(key,val,btn){
+  D[key]=val;
+  btn.closest('.yn').querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(key==='alc'){document.getElementById('subAlc').classList.toggle('on',val==='yes');if(val==='no'){D.drinkType=null;D.units=null;}document.getElementById('n0').classList.add('go');}
+  if(key==='unh'){document.getElementById('subUnh').classList.toggle('on',val==='yes');if(val==='no'){D.unhF=[];D.unhComment='';}}
+  if(key==='wo'){document.getElementById('subWo').classList.toggle('on',val==='yes');if(val==='no')D.woT=[];}
+}
+
+function buildUChips(){
+  const w=document.getElementById('uRow');
+  for(let i=1;i<=7;i++){
+    const c=document.createElement('div');
+    c.className='uc'+(i>=3?' heavy':'');c.textContent=i;
+    c.onclick=()=>{D.units=i;w.querySelectorAll('.uc').forEach(x=>x.classList.remove('on'));c.classList.add('on');};
+    w.appendChild(c);
+  }
+}
+function pickDrink(type,el){D.drinkType=type;document.querySelectorAll('.dtype').forEach(d=>d.classList.remove('on'));el.classList.add('on');}
+function tog(el,key){
+  const label=el.textContent.trim();el.classList.toggle('on');
+  if(!D[key])D[key]=[];const i=D[key].indexOf(label);
+  if(i===-1)D[key].push(label);else D[key].splice(i,1);
+}
+function togDanger(el,key,label){
+  el.classList.toggle('on');if(!D[key])D[key]=[];
+  const i=D[key].indexOf(label);if(i===-1)D[key].push(label);else D[key].splice(i,1);
+}
+function showPu(){document.getElementById('subPu').classList.add('on');document.getElementById('puDisp').textContent=D.puCount;}
+function hidePu(){document.getElementById('subPu').classList.remove('on');}
+function adjPu(n){D.puCount=Math.max(1,D.puCount+n);document.getElementById('puDisp').textContent=D.puCount;}
+function setPu(n){
+  D.puCount=n;document.getElementById('puDisp').textContent=n;
+  document.querySelectorAll('#subPu .chips .chip').forEach(c=>c.classList.toggle('on',c.textContent.trim()==n));
+}
+function setGoal(n){
+  goal=n||100;localStorage.setItem('hc_goal',goal);
+  document.getElementById('gDisp').textContent=goal;D.puCount=goal;document.getElementById('puDisp').textContent=goal;
+}
+
+// ══ SUMMARY ════════════════════════════════════════════
+function buildSummary(){
+  const rows=makeSumRows();
+  document.getElementById('sumRows').innerHTML=rows.map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
+  const d=new Date(),dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const wk=`hc_w_${player}_${d.getFullYear()}-${d.getMonth()+1}`;
+  document.getElementById('wtSec').style.display=(d.getDate()>=dim-2&&!localStorage.getItem(wk))?'block':'none';
+}
+function makeSumRows(){
+  const binge=D.unhF.includes('🚨 Binge eating'),heavy=(D.units||0)>=3;
+  return[
+    {k:'🍺 Alcohol',v:D.alc==='yes'?`Yes · ${D.units||'?'}u${heavy?' ⚠️':''}${D.drinkType?' ('+D.drinkType+')':''}`:'No',c:D.alc==='yes'?'b':'g'},
+    {k:'🍔 Unhealthy',v:D.unh==='yes'?`Yes${binge?' · 🚨':''}${D.unhF.filter(x=>x!=='🚨 Binge eating').length?' · '+D.unhF.filter(x=>x!=='🚨 Binge eating').join(', '):''}`:'No',c:D.unh==='yes'?'b':'g'},
+    {k:'🏃 Workout',v:D.wo==='yes'?`Yes${D.woT.length?' · '+D.woT.join(', '):''}`:'No',c:D.wo==='yes'?'g':''},
+    {k:'💪 Push-ups',v:D.pu==='yes'?`${D.puCount} done`:'Skipped',c:D.pu==='yes'?'g':''},
+  ];
+}
+
+// ══ SUBMIT ═════════════════════════════════════════════
+async function submit(){
+  const wt=document.getElementById('wtInp')?.value||'';
+  const unhComment=document.getElementById('unhComment')?.value||'';
+  const payload={player,date:todayKey(),alc:D.alc,drinkType:D.drinkType,units:D.units,unh:D.unh,unhF:D.unhF,unhComment,wo:D.wo,woT:D.woT,pu:D.pu,puCount:D.puCount,weight:wt,isBacktrack:false};
+  localStorage.setItem(`hc_${player}_${todayKey()}`,JSON.stringify(payload));
+  if(wt){const d=new Date();localStorage.setItem(`hc_w_${player}_${d.getFullYear()}-${d.getMonth()+1}`,wt);}
+  if(apiUrl){
+    try{await fetch(apiUrl,{method:'POST',body:JSON.stringify({action:'log',...payload}),headers:{'Content-Type':'application/json'}});showToast('Saved ✓');}
+    catch{showToast('Saved locally');}
+  }else showToast('Logged ✓');
+  renderDone(payload);goSlide(5);
+}
+
+function renderDone(data){
+  const bad=(data.alc==='yes'?1:0)+(data.unh==='yes'?1:0);
+  const good=(data.wo==='yes'?1:0)+(data.pu==='yes'?1:0);
+  document.getElementById('doneEm').textContent=bad===0&&good>=1?'🌟':bad>=2?'😬':'✅';
+  document.getElementById('doneTi').textContent=bad===0&&good>=1?'Clean day!':'Logged!';
+  document.getElementById('doneSu').textContent=bad===0&&good>=1?'Keep it up 🔥':'Come back tomorrow.';
+  const rows=[
+    {k:'🍺 Alcohol',v:data.alc==='yes'?`Yes${data.units?' · '+data.units+'u':''}${(data.units||0)>=3?' ⚠️':''}`:'No',c:data.alc==='yes'?'b':'g'},
+    {k:'🍔 Unhealthy',v:data.unh==='yes'?'Yes':'No',c:data.unh==='yes'?'b':'g'},
+    {k:'🏃 Workout',v:data.wo==='yes'?'Yes':'No',c:data.wo==='yes'?'g':''},
+    {k:'💪 Push-ups',v:data.pu==='yes'?`${data.puCount} done`:'Skipped',c:data.pu==='yes'?'g':''},
+  ];
+  document.getElementById('doneRows').innerHTML=rows.map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
+}
+
+function editToday(){
+  localStorage.removeItem(`hc_${player}_${todayKey()}`);
+  Object.assign(D,{alc:null,drinkType:null,units:null,unh:null,unhF:[],unhComment:'',wo:null,woT:[],pu:null,puCount:goal});
+  document.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.chip,.uc,.dtype').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('.sub').forEach(s=>s.classList.remove('on'));
+  document.getElementById('puDisp').textContent=goal;
+  document.getElementById('unhComment').value='';
+  showTab('checkin');goSlide(0);
+}
+
+// ══ DEBT ═══════════════════════════════════════════════
+function calcDebt(data){
+  const d=new Date(),daysElapsed=d.getDate();
+  const me=data[player]||{},fr=data[friend]||{};
+  const myM=daysElapsed-(me.logged||0),frM=daysElapsed-(fr.logged||0);
+  const net=(frM-myM)*FINE;
+  const alltime=parseInt(localStorage.getItem('hc_alltime_debt')||'0');
+  let cls,balAmt,sub;
+  if(Math.abs(net)<1){cls='even';balAmt=0;sub="You're even 🤝";}
+  else if(net>0){cls='owed';balAmt=net;sub=`${friend} owes you ${net} NOK`;}
+  else{cls='owe';balAmt=Math.abs(net);sub=`You owe ${friend} ${Math.abs(net)} NOK`;}
+  return{cls,balAmt,sub,myMissed:myM,frMissed:frM,alltime};
+}
+
+function renderDebt(d){
+  const pill=document.getElementById('debtPill');
+  pill.className='debt-pill '+d.cls;
+  const am=document.getElementById('dpAmount');
+  am.textContent=d.cls==='even'?'0 NOK':`${d.balAmt} NOK`;
+  am.className=`dp-amount ${d.cls}-c`;
+  document.getElementById('dpSub').textContent=d.sub;
+  document.getElementById('dpMyMissed').textContent=d.myMissed;
+  document.getElementById('dpFrMissed').textContent=d.frMissed;
+  document.getElementById('dpAlltime').textContent=d.alltime||0;
+  const altr=document.getElementById('dpAlltimeRow');
+  if(d.alltime!==0){altr.style.display='block';altr.textContent=`All-time carry-over: ${d.alltime} NOK`;}
+  else altr.style.display='none';
+}
+
+// ══ STATS ══════════════════════════════════════════════
+async function loadStats(){
+  buildLocalStats();
+  if(apiUrl){
+    try{const r=await fetch(`${apiUrl}?action=stats&period=${period}`);statsCache=await r.json();renderStats(statsCache);}
+    catch{showToast('Using local data');}
+  }
+}
+
+function buildLocalStats(){
+  const data={};
+  Object.keys(localStorage).filter(k=>k.startsWith('hc_')&&k.match(/\d{4}-\d{2}-\d{2}/)).forEach(k=>{
+    try{
+      const entry=JSON.parse(localStorage.getItem(k));
+      if(!entry||!entry.player||!entry.date)return;
+      const p=entry.player;
+      if(!data[p])data[p]={logged:0,alc:0,heavy:0,unh:0,binge:0,wo:0,pu:0,streak:0,lastEntry:'',weight:'',dates:[],dayAlc:Array(7).fill(0),dayUnh:Array(7).fill(0),dayWo:Array(7).fill(0)};
+      const s=data[p],d=new Date(entry.date),now=new Date();
+      if(period==='month'&&(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear()))return;
+      s.logged++;s.dates.push(entry.date);
+      const dow=d.getDay();
+      if(entry.alc==='yes'){s.alc++;s.dayAlc[dow]++;}
+      if((entry.units||0)>=3)s.heavy++;
+      if(entry.unh==='yes'){s.unh++;s.dayUnh[dow]++;}
+      if((entry.unhF||[]).includes('🚨 Binge eating'))s.binge++;
+      if(entry.wo==='yes'){s.wo++;s.dayWo[dow]++;}
+      if(entry.pu==='yes')s.pu++;
+      if(entry.weight)s.weight=entry.weight;
+      if(!s.lastEntry||entry.date>s.lastEntry)s.lastEntry=entry.date;
+    }catch{}
+  });
+  Object.values(data).forEach(s=>{
+    const sorted=[...new Set(s.dates)].sort().reverse();
+    let streak=0,check=new Date();
+    for(const ds of sorted){if(Math.round((check-new Date(ds))/864e5)<=1){streak++;check=new Date(ds);}else break;}
+    s.streak=streak;delete s.dates;
+  });
+  statsCache=data;renderStats(data);
+}
+
+function renderStats(data){
+  const me=data[player]||{},fr=data[friend]||{};
+  const dim=period==='month'?new Date().getDate():365;
+  renderDebt(calcDebt(data));
+
+  // H2H
+  const cats=[
+    {label:'🍺 Alcohol days',key:'alc',lb:true},
+    {label:'🥃 Excessive (3+ units)',key:'heavy',lb:true},
+    {label:'🍔 Unhealthy days',key:'unh',lb:true},
+    {label:'🏃 Workout days',key:'wo',lb:false},
+    {label:'💪 Push-up days',key:'pu',lb:false},
+  ];
+  document.getElementById('h2hCards').innerHTML=cats.map(cat=>{
+    const mv=me[cat.key]||0,fv=fr[cat.key]||0,max=Math.max(mv,fv,1);
+    let winner,winCls;
+    if(mv===fv){winner='Tie';winCls='tie';}
+    else if(cat.lb){winner=mv<fv?player:friend;winCls=mv<fv?(player==='Nikko'?'nikko':'mio'):(friend==='Nikko'?'nikko':'mio');}
+    else{winner=mv>fv?player:friend;winCls=mv>fv?(player==='Nikko'?'nikko':'mio'):(friend==='Nikko'?'nikko':'mio');}
+    const myPct=cat.lb?(fv===0&&mv===0?50:Math.round(fv/max*100)):Math.round(mv/max*100);
+    const frPct=cat.lb?Math.round(mv/max*100):Math.round(fv/max*100);
+    return`<div class="h2h-card">
+      <div class="h2h-top">
+        <div class="h2h-label">${cat.label}</div>
+        <div class="h2h-winner ${winCls}">${winner==='Tie'?'':'👑'} ${winner}</div>
+      </div>
+      <div class="h2h-bars">
+        <div class="h2h-row">
+          <div class="h2h-name ${player==='Nikko'?'nc':'mc'}">${player}</div>
+          <div class="h2h-bar-wrap"><div class="h2h-bar" style="width:${myPct}%;background:${player==='Nikko'?'var(--nikko)':'var(--mio)'}"></div></div>
+          <div class="h2h-val">${mv}</div>
+        </div>
+        <div class="h2h-row">
+          <div class="h2h-name ${friend==='Nikko'?'nc':'mc'}">${friend}</div>
+          <div class="h2h-bar-wrap"><div class="h2h-bar" style="width:${frPct}%;background:${friend==='Nikko'?'var(--nikko)':'var(--mio)'}"></div></div>
+          <div class="h2h-val">${fv}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Streaks
+  const myFp=Math.round(((me.logged||0)/dim)*100);
+  const frFp=Math.round(((fr.logged||0)/dim)*100);
+  document.getElementById('myStreak').innerHTML=`${me.streak||0} <span>days</span>`;
+  document.getElementById('myLast').textContent=me.lastEntry||'—';
+  document.getElementById('myFill').textContent=myFp+'%';
+  document.getElementById('myFillBar').style.width=myFp+'%';
+  document.getElementById('frStreak').innerHTML=`${fr.streak||0} <span>days</span>`;
+  document.getElementById('frLast').textContent=fr.lastEntry||'—';
+  document.getElementById('frFill').textContent=frFp+'%';
+  document.getElementById('frFillBar').style.width=frFp+'%';
+
+  renderTrends(data);
+}
+
+// ══ TRENDS ═════════════════════════════════════════════
+function setTrend(v){
+  trendView=v;
+  document.getElementById('trMe').classList.toggle('on',v==='me');
+  document.getElementById('trVs').classList.toggle('on',v==='vs');
+  if(statsCache)renderTrends(statsCache);
+}
+
+function renderTrends(data){
+  const me=data[player]||{},fr=data[friend]||{};
+  const myAlc=me.dayAlc||Array(7).fill(0),myUnh=me.dayUnh||Array(7).fill(0),myWo=me.dayWo||Array(7).fill(0);
+  const frAlc=fr.dayAlc||Array(7).fill(0),frUnh=fr.dayUnh||Array(7).fill(0),frWo=fr.dayWo||Array(7).fill(0);
+  const showFr=trendView==='vs';
+  renderChart('chartAlc',myAlc,showFr?frAlc:null,'var(--bad)','var(--mio)');
+  renderChart('chartUnh',myUnh,showFr?frUnh:null,'var(--warn)','var(--mio)');
+  renderChart('chartWo', myWo, showFr?frWo :null,'var(--good)','var(--mio)');
+  // Insights
+  document.getElementById('insAlc').textContent=peakDay(myAlc,'alc');
+  document.getElementById('insUnh').textContent=peakDay(myUnh,'unh');
+  document.getElementById('insWo').textContent=peakDay(myWo,'wo');
+  // Summary insights
+  const insights=buildInsights(me);
+  document.getElementById('insightRows').innerHTML=insights.map(r=>`<div class="ts-row"><span class="ts-key">${r.k}</span><span class="ts-val">${r.v}</span></div>`).join('');
+}
+
+function peakDay(arr,type){
+  const max=Math.max(...arr);
+  if(max===0)return'No data yet';
+  const idx=arr.indexOf(max);
+  const labels={'alc':'Most drinking','unh':'Most unhealthy','wo':'Most active'};
+  return`${labels[type]||'Peak'}: ${DAY_NAMES[idx]}`;
+}
+
+function buildInsights(me){
+  const rows=[];
+  const alcArr=me.dayAlc||Array(7).fill(0);
+  const woArr=me.dayWo||Array(7).fill(0);
+  const maxAlcIdx=alcArr.indexOf(Math.max(...alcArr));
+  const maxWoIdx=woArr.indexOf(Math.max(...woArr));
+  if(Math.max(...alcArr)>0)rows.push({k:'🍺 Most likely to drink',v:DAY_NAMES[maxAlcIdx]});
+  if(Math.max(...woArr)>0) rows.push({k:'🏃 Most likely to work out',v:DAY_NAMES[maxWoIdx]});
+  rows.push({k:'🍔 Unhealthy days',v:`${me.unh||0} this ${period==='month'?'month':'year'}`});
+  rows.push({k:'💪 Push-up days',v:`${me.pu||0} this ${period==='month'?'month':'year'}`});
+  rows.push({k:'⚖️ Weight',v:me.weight?`${me.weight} kg`:'Not logged'});
+  return rows;
+}
+
+function renderChart(id,myData,frData,myColor,frColor){
+  const el=document.getElementById(id);if(!el)return;
+  const all=frData?[...myData,...frData]:[...myData];
+  const max=Math.max(...all,1);
+  el.innerHTML=DAYS.map((day,i)=>{
+    const mv=myData[i]||0,mh=Math.max(Math.round((mv/max)*52),mv>0?3:0);
+    let fr2='';
+    if(frData){const fv=frData[i]||0,fh=Math.max(Math.round((fv/max)*52),fv>0?3:0);fr2=`<div class="day-bar" style="height:${fh}px;width:45%;background:${frColor};opacity:.65"></div>`;}
+    return`<div class="day-col"><div class="day-bar-wrap"><div class="day-bar" style="height:${mh}px;width:${frData?'45%':'70%'};background:${myColor}"></div>${fr2}</div><div class="day-lbl">${day}</div></div>`;
+  }).join('');
+}
+
+// ══ PERIOD ═════════════════════════════════════════════
+function setPeriod(p){
+  period=p;
+  document.getElementById('perMonth').classList.toggle('on',p==='month');
+  document.getElementById('perAll').classList.toggle('on',p==='all');
+  loadStats();
+}
+
+// ══ SETTLE ═════════════════════════════════════════════
+function openSettle(){
+  const d=statsCache?calcDebt(statsCache):{cls:'even',balAmt:0,sub:"You're even"};
+  document.getElementById('settleText').textContent=d.cls==='even'?"You're already even — nothing to settle.":d.cls==='owe'?`You owe ${friend} ${d.balAmt} NOK. Confirm once settled.`:`${friend} owes you ${d.balAmt} NOK. Confirm once settled.`;
+  document.getElementById('settleModal').classList.remove('hidden');
+}
+function closeSettle(){document.getElementById('settleModal').classList.add('hidden');}
+function doSettle(){
+  localStorage.setItem('hc_debt_settled',todayKey());
+  closeSettle();showToast('Settled! 🤝');
+  renderDebt({cls:'even',balAmt:0,sub:"You're even 🤝",myMissed:0,frMissed:0,alltime:parseInt(localStorage.getItem('hc_alltime_debt')||'0')});
+}
+function monthSettle(settled){
+  document.getElementById('monthModal').classList.add('hidden');
+  if(!settled&&statsCache){
+    const d=calcDebt(statsCache);
+    const prev=parseInt(localStorage.getItem('hc_alltime_debt')||'0');
+    localStorage.setItem('hc_alltime_debt',prev+(d.cls==='owe'?-d.balAmt:d.balAmt));
+    showToast('Carried over ✓');
+  }else showToast('Great — all settled 🤝');
+}
+
+// ══ TABS ═══════════════════════════════════════════════
+function showTab(t){
+  // Block stats/trends if not logged today
+  if((t==='stats'||t==='trends')&&!localStorage.getItem(`hc_${player}_${todayKey()}`)){
+    showToast('Fill in today first 📋');showTab('checkin');return;
+  }
+  ['checkin','stats','trends','settings'].forEach(n=>{
+    const el=document.getElementById(`t${n.charAt(0).toUpperCase()+n.slice(1)}`);
+    if(el)el.style.display=n===t?'flex':'none';
+    const nb=document.getElementById(`nb-${n}`);
+    if(nb)nb.classList.toggle('on',n===t);
+  });
+  document.getElementById('prog').style.display=t==='checkin'&&curSlide<TOTAL?'block':'none';
+  const titles={checkin:'Daily Check-in',stats:'Stats',trends:'Trends',settings:'Settings'};
+  document.getElementById('tbTitle').textContent=titles[t]||'';
+  if(t==='stats'||t==='trends')loadStats();
+}
+
+// ══ SETTINGS ═══════════════════════════════════════════
+function saveSet(){
+  player=document.getElementById('sPlayer').value;
+  friend=document.getElementById('sFriend').value||'Mio';
+  apiUrl=document.getElementById('sUrl').value.trim();
+  localStorage.setItem('hc_player',player);localStorage.setItem('hc_friend',friend);localStorage.setItem('hc_url',apiUrl);
+  document.getElementById('pname').textContent=player;
+  document.getElementById('pdot').style.background=player==='Nikko'?'var(--nikko)':'var(--mio)';
+  document.getElementById('mcYouName').textContent=player;
+  document.getElementById('mcFrName').textContent=friend;
+  document.getElementById('trFrName').textContent=friend;
+  document.getElementById('dpMyName').textContent=player+' missed';
+  document.getElementById('dpFrName').textContent=friend+' missed';
+  showToast('Saved ✓');
+}
+
+// ══ TOAST ══════════════════════════════════════════════
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500);}
+
+// ══ APPS SCRIPT ════════════════════════════════════════
+function setScr(){
+  document.getElementById('scrBox').textContent=
+`const SHEET='HealthLog';
+function doPost(e){
+  const d=JSON.parse(e.postData.contents);
+  const sh=SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET)||
+    SpreadsheetApp.getActiveSpreadsheet().insertSheet(SHEET);
+  if(sh.getLastRow()===0) sh.appendRow([
+    'Player','Date','Alc','DrinkType','Units','Unh',
+    'Foods','Comment','Workout','WoTypes',
+    'Pushups','PushCount','Weight','Backtrack','Saved']);
+  const rows=sh.getDataRange().getValues();
+  for(let i=rows.length-1;i>=1;i--)
+    if(rows[i][0]===d.player&&rows[i][1]===d.date)
+      sh.deleteRow(i+1);
+  sh.appendRow([d.player,d.date,d.alc,d.drinkType||'',
+    d.units||'',d.unh,(d.unhF||[]).join(', '),
+    d.unhComment||'',d.wo,(d.woT||[]).join(', '),
+    d.pu,d.puCount||'',d.weight||'',
+    d.isBacktrack?'yes':'no',new Date().toISOString()]);
+  return ContentService.createTextOutput('ok');
+}
+function doGet(e){
+  if(e.parameter.action!=='stats')
+    return ContentService.createTextOutput('{}');
+  const sh=SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET);
+  if(!sh) return ContentService.createTextOutput('{}');
+  const all=sh.getDataRange().getValues().slice(1);
+  const now=new Date(),period=e.parameter.period||'month';
+  const stats={};
+  all.forEach(r=>{
+    const[pl,dt,al,,un,unh,,,wo,,pc,,wt]=r;
+    if(!pl||!dt) return;
+    const d=new Date(dt);
+    if(period==='month'&&
+      (d.getMonth()!==now.getMonth()||
+       d.getFullYear()!==now.getFullYear())) return;
+    if(!stats[pl]) stats[pl]={
+      logged:0,alc:0,heavy:0,unh:0,wo:0,pu:0,
+      streak:0,lastEntry:'',weight:'',dates:[],
+      dayAlc:[0,0,0,0,0,0,0],
+      dayUnh:[0,0,0,0,0,0,0],
+      dayWo:[0,0,0,0,0,0,0]};
+    const s=stats[pl],dow=d.getDay();
+    s.logged++;s.dates.push(dt);
+    if(al==='yes'){s.alc++;s.dayAlc[dow]++;}
+    if(un>=3) s.heavy++;
+    if(unh==='yes'){s.unh++;s.dayUnh[dow]++;}
+    if(wo==='yes'){s.wo++;s.dayWo[dow]++;}
+    if(pc) s.pu++;
+    if(wt) s.weight=wt;
+    if(!s.lastEntry||dt>s.lastEntry) s.lastEntry=dt;
+  });
+  Object.values(stats).forEach(s=>{
+    const sorted=[...new Set(s.dates)].sort().reverse();
+    let streak=0,check=new Date();
+    for(const ds of sorted){
+      if(Math.round((check-new Date(ds))/864e5)<=1)
+        {streak++;check=new Date(ds);}else break;}
+    s.streak=streak;delete s.dates;
+  });
+  return ContentService
+    .createTextOutput(JSON.stringify(stats))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+}
+</script>
+</body>
+</html>

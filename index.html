@@ -110,9 +110,7 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:r
 .dp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .dp-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .dp-amount{font-size:26px;font-weight:900;font-family:var(--fm);letter-spacing:-1px;line-height:1}
-.dp-amount.owe-c{color:var(--bad)}
-.dp-amount.owed-c{color:var(--good)}
-.dp-amount.even-c{color:var(--muted)}
+.dp-amount.owe-c{color:var(--bad)}.dp-amount.owed-c{color:var(--good)}.dp-amount.even-c{color:var(--muted)}
 .dp-sub{font-size:11px;color:var(--muted);margin-bottom:10px}
 .dp-div{height:1px;background:rgba(255,255,255,.06);margin-bottom:10px}
 .dp-stats{display:flex;justify-content:space-between;align-items:center}
@@ -164,8 +162,7 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:r
 .ts-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
 .ts-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px}
 .ts-row:last-child{border-bottom:none}
-.ts-key{color:var(--muted)}
-.ts-val{font-weight:700}
+.ts-key{color:var(--muted)}.ts-val{font-weight:700}
 nav{display:flex;flex-shrink:0;border-top:1px solid var(--bdr);background:rgba(8,6,16,.96);backdrop-filter:blur(16px)}
 .bnav{flex:1;padding:9px 0 12px;border:none;background:transparent;color:var(--muted);font-family:var(--fn);font-size:9px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:color .14s}
 .bnav.on{color:var(--text)}
@@ -468,7 +465,7 @@ nav{display:flex;flex-shrink:0;border-top:1px solid var(--bdr);background:rgba(8
       </div>
       <div class="stat-sec">💸 Penalty</div>
       <div style="background:linear-gradient(160deg,var(--s1),var(--s2));border:1px solid var(--bdr);border-radius:var(--r);padding:16px 18px;margin-bottom:12px">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">50 NOK per missed day · 25 NOK to backtrack · 30 NOK/day over alcohol (10) or food (12) limits.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">50 NOK per missed day · 25 NOK to backtrack · 30 NOK/day over alcohol (10) or food (12) limit.</div>
         <button onclick="openSettle()" style="width:100%;padding:12px;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);border-radius:12px;color:var(--bad);font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer">Settle up / reset month</button>
       </div>
       <div class="stat-sec">Apps Script code</div>
@@ -498,7 +495,7 @@ nav{display:flex;flex-shrink:0;border-top:1px solid var(--bdr);background:rgba(8
 <div class="modal-bg hidden" id="monthModal">
   <div class="modal">
     <h3>📅 New month!</h3>
-    <p id="monthModalText">Is last month's debt settled?</p>
+    <p>Is last month's debt settled?</p>
     <div class="modal-btns">
       <button class="mbtn primary" onclick="monthSettle(true)">Yes — all settled 🤝</button>
       <button class="mbtn ghost" onclick="monthSettle(false)">No — carry it over</button>
@@ -508,9 +505,12 @@ nav{display:flex;flex-shrink:0;border-top:1px solid var(--bdr);background:rgba(8
 <div class="toast" id="toast"></div>
 <script>
 const D={alc:null,drinkType:null,units:null,unh:null,unhF:[],unhComment:'',wo:null,woT:[],pu:null,puCount:100};
-let player='',friend='Mio',apiUrl='https://script.google.com/macros/s/AKfycbxIW47frjGjXb1KdtR0VxBFMde7_KxaBTnivZEjx5aZW_T_t9YwrKHR7za3K5kIKTNE/exec',goal=100,period='month',trendView='me',statsCache=null,curSlide=0;const TOTAL=5,FINE=50,BACK_FINE=25,ALC_THRESHOLD=10,FOOD_THRESHOLD=12,BEHAV_FINE=30;
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxIW47frjGjXb1KdtR0VxBFMde7_KxaBTnivZEjx5aZW_T_t9YwrKHR7za3K5kIKTNE/exec';
+let player='',friend='Mio',apiUrl=SCRIPT_URL,goal=100,period='month',trendView='me',statsCache=null,curSlide=0;
+const TOTAL=5,FINE=50,BACK_FINE=25,ALC_THRESHOLD=10,FOOD_THRESHOLD=12,BEHAV_FINE=30;
 const DAYS=['Su','Mo','Tu','We','Th','Fr','Sa'];
 const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
 window.onload=()=>{
   buildUChips();setScr();
   const d=new Date();
@@ -527,7 +527,6 @@ function setPlayer(name){
 function resetPlayer(){if(!confirm('Switch player?'))return;localStorage.removeItem('hc_player');location.reload();}
 function bootApp(){
   friend=localStorage.getItem('hc_friend')||(player==='Nikko'?'Mio':'Nikko');
-  apiUrl=localStorage.getItem('hc_url')||'';
   goal=parseInt(localStorage.getItem('hc_goal')||'100');
   ['topbar','main','bottomNav'].forEach(id=>document.getElementById(id).style.display='flex');
   document.getElementById('onboard').style.display='none';
@@ -535,7 +534,7 @@ function bootApp(){
   document.getElementById('pdot').style.background=player==='Nikko'?'var(--nikko)':'var(--mio)';
   document.getElementById('sPlayer').value=player;
   document.getElementById('sFriend').value=friend;
-  document.getElementById('sUrl').value=apiUrl;
+  document.getElementById('sUrl').value=SCRIPT_URL;
   document.getElementById('mcYouName').textContent=player;
   document.getElementById('mcFrName').textContent=friend;
   document.getElementById('trFrName').textContent=friend;
@@ -563,10 +562,7 @@ function goSlide(i){
   document.getElementById('slides').style.transform=`translateX(-${i*100}%)`;
   const done=i>=TOTAL;
   document.getElementById('prog').style.display=done?'none':'block';
-  if(!done){
-    document.getElementById('progFill').style.width=(i/TOTAL*100)+'%';
-    document.getElementById('progLbl').textContent=`Question ${i+1} of ${TOTAL}`;
-  }
+  if(!done){document.getElementById('progFill').style.width=(i/TOTAL*100)+'%';document.getElementById('progLbl').textContent=`Question ${i+1} of ${TOTAL}`;}
   if(i===TOTAL-1)buildSummary();
   if(i===0)document.getElementById('n0').classList.toggle('go',D.alc!==null);
 }
@@ -603,11 +599,9 @@ function adjPu(n){D.puCount=Math.max(1,D.puCount+n);document.getElementById('puD
 function setPu(n){D.puCount=n;document.getElementById('puDisp').textContent=n;document.querySelectorAll('#subPu .chips .chip').forEach(c=>c.classList.toggle('on',c.textContent.trim()==n));}
 function setGoal(n){goal=n||100;localStorage.setItem('hc_goal',goal);document.getElementById('gDisp').textContent=goal;D.puCount=goal;document.getElementById('puDisp').textContent=goal;}
 function buildSummary(){
-  const rows=makeSumRows();
-  document.getElementById('sumRows').innerHTML=rows.map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
+  document.getElementById('sumRows').innerHTML=makeSumRows().map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
   const d=new Date(),dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
-  const wk=`hc_w_${player}_${d.getFullYear()}-${d.getMonth()+1}`;
-  document.getElementById('wtSec').style.display=(d.getDate()>=dim-2&&!localStorage.getItem(wk))?'block':'none';
+  document.getElementById('wtSec').style.display=(d.getDate()>=dim-2&&!localStorage.getItem(`hc_w_${player}_${d.getFullYear()}-${d.getMonth()+1}`))?'block':'none';
 }
 function makeSumRows(){
   const binge=D.unhF.includes('🚨 Binge eating'),heavy=(D.units||0)>=3;
@@ -624,8 +618,10 @@ async function submit(){
   const payload={player,date:todayKey(),alc:D.alc,drinkType:D.drinkType,units:D.units,unh:D.unh,unhF:D.unhF,unhComment,wo:D.wo,woT:D.woT,pu:D.pu,puCount:D.puCount,weight:wt,isBacktrack:false};
   localStorage.setItem(`hc_${player}_${todayKey()}`,JSON.stringify(payload));
   if(wt){const d=new Date();localStorage.setItem(`hc_w_${player}_${d.getFullYear()}-${d.getMonth()+1}`,wt);}
-  if(apiUrl){try{await fetch(apiUrl,{method:'POST',body:JSON.stringify({action:'log',...payload}),headers:{'Content-Type':'application/json'}});showToast('Saved ✓');}catch{showToast('Saved locally');}}
-  else showToast('Logged ✓');
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'log',...payload}),headers:{'Content-Type':'text/plain'},mode:'no-cors'});
+    showToast('Saved ✓');
+  }catch(e){showToast('Saved locally');}
   renderDone(payload);goSlide(5);
 }
 function renderDone(data){
@@ -634,13 +630,12 @@ function renderDone(data){
   document.getElementById('doneEm').textContent=bad===0&&good>=1?'🌟':bad>=2?'😬':'✅';
   document.getElementById('doneTi').textContent=bad===0&&good>=1?'Clean day!':'Logged!';
   document.getElementById('doneSu').textContent=bad===0&&good>=1?'Keep it up 🔥':'Come back tomorrow.';
-  const rows=[
+  document.getElementById('doneRows').innerHTML=[
     {k:'🍺 Alcohol',v:data.alc==='yes'?`Yes${data.units?' · '+data.units+'u':''}${(data.units||0)>=3?' ⚠️':''}`:'No',c:data.alc==='yes'?'b':'g'},
     {k:'🍔 Unhealthy',v:data.unh==='yes'?'Yes':'No',c:data.unh==='yes'?'b':'g'},
     {k:'🏃 Workout',v:data.wo==='yes'?'Yes':'No',c:data.wo==='yes'?'g':''},
     {k:'💪 Push-ups',v:data.pu==='yes'?`${data.puCount} done`:'Skipped',c:data.pu==='yes'?'g':''},
-  ];
-  document.getElementById('doneRows').innerHTML=rows.map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
+  ].map(r=>`<div class="drow"><span class="drow-k">${r.k}</span><span class="drow-v ${r.c||''}">${r.v}</span></div>`).join('');
   const bfInfo=getMyCurrentBehavFines();
   const banner=document.getElementById('fineBanner');
   if(bfInfo.lines.length>0){banner.style.display='block';document.getElementById('fineBannerRows').innerHTML=bfInfo.lines.map(l=>l+'<br>').join('');}
@@ -673,8 +668,8 @@ function editToday(){
 function calcBehavFines(s){
   const alcOver=Math.max(0,(s.alc||0)-ALC_THRESHOLD),foodOver=Math.max(0,(s.unh||0)-FOOD_THRESHOLD);
   const lines=[];
-  if(alcOver>0)lines.push(`🍺 Alcohol: ${s.alc} days (${alcOver} over) = ${alcOver*BEHAV_FINE} NOK`);
-  if(foodOver>0)lines.push(`🍔 Unhealthy: ${s.unh} days (${foodOver} over) = ${foodOver*BEHAV_FINE} NOK`);
+  if(alcOver>0)lines.push(`${s.alc} alc days (+${alcOver*BEHAV_FINE} NOK)`);
+  if(foodOver>0)lines.push(`${s.unh} food days (+${foodOver*BEHAV_FINE} NOK)`);
   return{total:(alcOver+foodOver)*BEHAV_FINE,lines};
 }
 function calcDebt(data){
@@ -700,23 +695,22 @@ function renderDebt(d){
   document.getElementById('dpMyMissed').textContent=d.myMissed||0;
   document.getElementById('dpFrMissed').textContent=d.frMissed||0;
   document.getElementById('dpAlltime').textContent=d.alltime||0;
-  const bfEl=document.getElementById('dpBehavFines');
   const total=(d.myBehav?.total||0)+(d.frBehav?.total||0);
+  const bfEl=document.getElementById('dpBehavFines');
   bfEl.textContent=total>0?`+${total}`:'0';
   bfEl.style.color=total>0?'var(--bad)':'var(--muted)';
   const altr=document.getElementById('dpAlltimeRow');
-  const bfLines=[...( d.myBehav?.lines?.length?[`${player}: ${d.myBehav.total} NOK`]:[]),...(d.frBehav?.lines?.length?[`${friend}: ${d.frBehav.total} NOK`]:[])];
-  if(d.alltime!==0||bfLines.length>0){
-    altr.style.display='block';
-    let txt='';
-    if(d.alltime!==0)txt+=`Carry-over: ${d.alltime} NOK`;
-    if(bfLines.length>0){if(txt)txt+=' · ';txt+='Behav: '+bfLines.join(', ');}
-    altr.textContent=txt;
-  }else altr.style.display='none';
+  const parts=[];
+  if(d.alltime!==0)parts.push(`Carry-over: ${d.alltime} NOK`);
+  if(d.myBehav?.total>0)parts.push(`${player}: ${d.myBehav.total} NOK behav.`);
+  if(d.frBehav?.total>0)parts.push(`${friend}: ${d.frBehav.total} NOK behav.`);
+  if(parts.length>0){altr.style.display='block';altr.textContent=parts.join(' · ');}
+  else altr.style.display='none';
 }
 async function loadStats(){
   buildLocalStats();
-  if(apiUrl){try{const r=await fetch(`${apiUrl}?action=stats&period=${period}`);statsCache=await r.json();renderStats(statsCache);}catch{showToast('Using local data');}}
+  try{const r=await fetch(`${SCRIPT_URL}?action=stats&period=${period}`);const data=await r.json();statsCache=data;renderStats(data);}
+  catch{}
 }
 function buildLocalStats(){
   const data={};
@@ -779,12 +773,7 @@ function renderStats(data){
   document.getElementById('frFillBar').style.width=frFp+'%';
   renderTrends(data);
 }
-function setTrend(v){
-  trendView=v;
-  document.getElementById('trMe').classList.toggle('on',v==='me');
-  document.getElementById('trVs').classList.toggle('on',v==='vs');
-  if(statsCache)renderTrends(statsCache);
-}
+function setTrend(v){trendView=v;document.getElementById('trMe').classList.toggle('on',v==='me');document.getElementById('trVs').classList.toggle('on',v==='vs');if(statsCache)renderTrends(statsCache);}
 function renderTrends(data){
   const me=data[player]||{},fr=data[friend]||{};
   const myAlc=me.dayAlc||Array(7).fill(0),myUnh=me.dayUnh||Array(7).fill(0),myWo=me.dayWo||Array(7).fill(0);
@@ -800,13 +789,12 @@ function renderTrends(data){
 }
 function peakDay(arr,type){
   const max=Math.max(...arr);if(max===0)return'No data yet';
-  const labels={alc:'Most drinking',unh:'Most unhealthy',wo:'Most active'};
-  return`${labels[type]}: ${DAY_NAMES[arr.indexOf(max)]}`;
+  return`${({alc:'Most drinking',unh:'Most unhealthy',wo:'Most active'})[type]}: ${DAY_NAMES[arr.indexOf(max)]}`;
 }
 function buildInsights(me){
-  const rows=[],alcArr=me.dayAlc||Array(7).fill(0),woArr=me.dayWo||Array(7).fill(0);
-  if(Math.max(...alcArr)>0)rows.push({k:'🍺 Most likely to drink',v:DAY_NAMES[alcArr.indexOf(Math.max(...alcArr))]});
-  if(Math.max(...woArr)>0)rows.push({k:'🏃 Most likely to work out',v:DAY_NAMES[woArr.indexOf(Math.max(...woArr))]});
+  const rows=[],a=me.dayAlc||Array(7).fill(0),w=me.dayWo||Array(7).fill(0);
+  if(Math.max(...a)>0)rows.push({k:'🍺 Most likely to drink',v:DAY_NAMES[a.indexOf(Math.max(...a))]});
+  if(Math.max(...w)>0)rows.push({k:'🏃 Most likely to work out',v:DAY_NAMES[w.indexOf(Math.max(...w))]});
   rows.push({k:'🍔 Unhealthy days',v:`${me.unh||0} this ${period==='month'?'month':'year'}`});
   rows.push({k:'💪 Push-up days',v:`${me.pu||0} this ${period==='month'?'month':'year'}`});
   rows.push({k:'⚖️ Weight',v:me.weight?`${me.weight} kg`:'Not logged'});
@@ -814,7 +802,7 @@ function buildInsights(me){
 }
 function renderChart(id,myData,frData,myColor,frColor){
   const el=document.getElementById(id);if(!el)return;
-  const all=frData?[...myData,...frData]:[...myData],max=Math.max(...all,1);
+  const max=Math.max(...(frData?[...myData,...frData]:[...myData]),1);
   el.innerHTML=DAYS.map((day,i)=>{
     const mv=myData[i]||0,mh=Math.max(Math.round((mv/max)*52),mv>0?3:0);
     let fr2='';
@@ -825,11 +813,14 @@ function renderChart(id,myData,frData,myColor,frColor){
 function setPeriod(p){period=p;document.getElementById('perMonth').classList.toggle('on',p==='month');document.getElementById('perAll').classList.toggle('on',p==='all');loadStats();}
 function openSettle(){
   const d=statsCache?calcDebt(statsCache):{cls:'even',balAmt:0};
-  document.getElementById('settleText').textContent=d.cls==='even'?"You're already even — nothing to settle.":d.cls==='owe'?`You owe ${friend} ${d.balAmt} NOK. Confirm once settled.`:`${friend} owes you ${d.balAmt} NOK. Confirm once settled.`;
+  document.getElementById('settleText').textContent=d.cls==='even'?"You're already even.":d.cls==='owe'?`You owe ${friend} ${d.balAmt} NOK. Confirm once settled.`:`${friend} owes you ${d.balAmt} NOK. Confirm once settled.`;
   document.getElementById('settleModal').classList.remove('hidden');
 }
 function closeSettle(){document.getElementById('settleModal').classList.add('hidden');}
-function doSettle(){localStorage.setItem('hc_debt_settled',todayKey());closeSettle();showToast('Settled! 🤝');renderDebt({cls:'even',balAmt:0,sub:"You're even 🤝",myMissed:0,frMissed:0,alltime:parseInt(localStorage.getItem('hc_alltime_debt')||'0'),myBehav:{total:0,lines:[]},frBehav:{total:0,lines:[]}});}
+function doSettle(){
+  localStorage.setItem('hc_debt_settled',todayKey());closeSettle();showToast('Settled! 🤝');
+  renderDebt({cls:'even',balAmt:0,sub:"You're even 🤝",myMissed:0,frMissed:0,alltime:parseInt(localStorage.getItem('hc_alltime_debt')||'0'),myBehav:{total:0,lines:[]},frBehav:{total:0,lines:[]}});
+}
 function monthSettle(settled){
   document.getElementById('monthModal').classList.add('hidden');
   if(!settled&&statsCache){const d=calcDebt(statsCache);const prev=parseInt(localStorage.getItem('hc_alltime_debt')||'0');localStorage.setItem('hc_alltime_debt',prev+(d.cls==='owe'?-d.balAmt:d.balAmt));showToast('Carried over ✓');}
@@ -840,16 +831,15 @@ function showTab(t){
   ['checkin','stats','trends','settings'].forEach(n=>{
     const el=document.getElementById(`t${n.charAt(0).toUpperCase()+n.slice(1)}`);
     if(el)el.style.display=n===t?'flex':'none';
-    const nb=document.getElementById(`nb-${n}`);
-    if(nb)nb.classList.toggle('on',n===t);
+    const nb=document.getElementById(`nb-${n}`);if(nb)nb.classList.toggle('on',n===t);
   });
   document.getElementById('prog').style.display=t==='checkin'&&curSlide<TOTAL?'block':'none';
   document.getElementById('tbTitle').textContent={checkin:'Daily Check-in',stats:'Stats',trends:'Trends',settings:'Settings'}[t]||'';
   if(t==='stats'||t==='trends')loadStats();
 }
 function saveSet(){
-  player=document.getElementById('sPlayer').value;friend=document.getElementById('sFriend').value||'Mio';apiUrl=document.getElementById('sUrl').value.trim();
-  localStorage.setItem('hc_player',player);localStorage.setItem('hc_friend',friend);localStorage.setItem('hc_url',apiUrl);
+  player=document.getElementById('sPlayer').value;friend=document.getElementById('sFriend').value||'Mio';
+  localStorage.setItem('hc_player',player);localStorage.setItem('hc_friend',friend);
   document.getElementById('pname').textContent=player;
   document.getElementById('pdot').style.background=player==='Nikko'?'var(--nikko)':'var(--mio)';
   document.getElementById('mcYouName').textContent=player;document.getElementById('mcFrName').textContent=friend;
@@ -860,18 +850,20 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 function setScr(){
   document.getElementById('scrBox').textContent=`const SHEET='HealthLog';
 function doPost(e){
-  const d=JSON.parse(e.postData.contents);
-  const sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET)||SpreadsheetApp.getActiveSpreadsheet().insertSheet(SHEET);
-  if(sh.getLastRow()===0)sh.appendRow(['Player','Date','Alc','DrinkType','Units','Unh','Foods','Comment','Workout','WoTypes','Pushups','PushCount','Weight','Backtrack','Saved']);
-  const rows=sh.getDataRange().getValues();
-  for(let i=rows.length-1;i>=1;i--)if(rows[i][0]===d.player&&rows[i][1]===d.date)sh.deleteRow(i+1);
-  sh.appendRow([d.player,d.date,d.alc,d.drinkType||'',d.units||'',d.unh,(d.unhF||[]).join(', '),d.unhComment||'',d.wo,(d.woT||[]).join(', '),d.pu,d.puCount||'',d.weight||'',d.isBacktrack?'yes':'no',new Date().toISOString()]);
-  return ContentService.createTextOutput('ok');
+  try{
+    const d=JSON.parse(e.postData.contents);
+    const sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET)||SpreadsheetApp.getActiveSpreadsheet().insertSheet(SHEET);
+    if(sh.getLastRow()===0)sh.appendRow(['Player','Date','Alc','DrinkType','Units','Unh','Foods','Comment','Workout','WoTypes','Pushups','PushCount','Weight','Backtrack','Saved']);
+    const rows=sh.getDataRange().getValues();
+    for(let i=rows.length-1;i>=1;i--)if(rows[i][0]===d.player&&rows[i][1]===d.date)sh.deleteRow(i+1);
+    sh.appendRow([d.player,d.date,d.alc,d.drinkType||'',d.units||'',d.unh,(d.unhF||[]).join(', '),d.unhComment||'',d.wo,(d.woT||[]).join(', '),d.pu,d.puCount||'',d.weight||'',d.isBacktrack?'yes':'no',new Date().toISOString()]);
+  }catch(err){Logger.log(err);}
+  return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
 }
 function doGet(e){
-  if(e.parameter.action!=='stats')return ContentService.createTextOutput('{}');
+  if(e.parameter.action!=='stats')return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
   const sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET);
-  if(!sh)return ContentService.createTextOutput('{}');
+  if(!sh)return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
   const all=sh.getDataRange().getValues().slice(1),now=new Date(),period=e.parameter.period||'month',stats={};
   all.forEach(r=>{
     const[pl,dt,al,,un,unh,,,wo,,pc,,wt]=r;if(!pl||!dt)return;

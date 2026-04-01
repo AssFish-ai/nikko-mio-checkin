@@ -2378,7 +2378,11 @@
     }
 
     // ── SUBMIT ────────────────────────────────────────────
+    let submitting = false;
     async function submit() {
+        if (submitting)
+            return;
+        submitting = true;
         const wt = document.getElementById('wtInp')?.value || '';
         const unhComment = document.getElementById('unhComment')?.value || '';
         const totalUnits = D.drinks.beer + D.drinks.wine;
@@ -2423,6 +2427,7 @@
         }
         renderDone(payload);
         goSlide(5);
+        submitting = false;
     }
 
     function renderDone(data) {

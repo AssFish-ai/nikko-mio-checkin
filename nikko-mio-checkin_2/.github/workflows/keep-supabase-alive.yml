@@ -1,1 +1,17 @@
+name: Keep Supabase Alive
 
+on:
+  schedule:
+    - cron: '0 12 */5 * *'  # Every 5 days at noon UTC
+  workflow_dispatch:         # Also lets you trigger it manually from GitHub
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Kasino API (read-only)
+        run: |
+          curl -sf "https://nikkomiokasino.netlify.app/api/kasino?action=getAll" \
+            -o /dev/null \
+            && echo "✅ Supabase is alive" \
+            || echo "⚠️ Ping failed — check Netlify/Supabase"
